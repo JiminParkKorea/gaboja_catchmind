@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Word Game</title>
+    <style>
+        /* 페이지 전체를 중앙 정렬 */
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            text-align: center;
+            width: 80%;
+            /* 필요에 따라 너비 조절 */
+            max-width: 800px;
+            /* 최대 너비 설정 */
+        }
+
+        .hidden {
+            display: block;
+            /* 숨길 때도 블록 형태로 유지 */
+            visibility: hidden;
+            /* 요소를 화면에서 숨기되 공간을 차지하도록 함 */
+        }
+
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            display: block;
+            /* 버튼을 블록 형태로 표시 */
+            margin-left: auto;
+            margin-right: auto;
+            /* 버튼 중앙 정렬 */
+        }
+
+        #word-display {
+            margin-top: 20px;
+            display: block;
+            /* 단어 디스플레이를 블록 형태로 표시 */
+        }
+
+
+        #current-word {
+            font-size: 10em;
+            display: block;
+            /* 단어를 블록 형태로 표시 */
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="set-selection">
+        <button id="0" onclick="selectSet(this.id)">세트 1</button>
+        <button id="1" onclick="selectSet(this.id)">세트 2</button>
+        <button id="2" onclick="selectSet(this.id)">세트 3</button>
+        <button id="3" onclick="selectSet(this.id)">세트 4</button>
+        <button id="4" onclick="selectSet(this.id)">세트 5</button>
+        <button id="5" onclick="selectSet(this.id)">세트 6</button>
+        <button id="6" onclick="selectSet(this.id)">세트 7</button>
+        <button id="7" onclick="selectSet(this.id)">세트 8</button>
+    </div>
+
+    <div id="word-display" class="hidden">
+        <div class="word" id="current-word"></div>
+        <button id="next-button" onclick="nextWord()">다음 단어</button>
+        <button id="end-button" class="hidden" onclick="endGame()">종료</button>
+    </div>
+
+    <p id="time-elapsed" class="hidden"></p>
+
+    <button id="start-button" class="hidden" onclick="startGame()">시작</button>
+
+    <script>
+        let allWords = [
+            "사과", "바나나", "포도", "오렌지", "수박", "딸기", "복숭아", "파인애플", "귤", "레몬",
+            "당근", "토마토", "양파", "상추", "배추", "무", "오이", "브로콜리", "호박", "버섯",
+            "사람", "자동차", "자전거", "전화기", "책", "컴퓨터", "의자", "테이블", "시계", "냉장고",
+            "강아지", "고양이", "새", "물고기", "토끼", "코끼리", "사자", "호랑이", "기린", "곰",
+            "장미", "해바라기", "튤립", "국화", "백합", "민들레", "작약", "나팔꽃", "선인장", "제비꽃",
+            "칼", "가위", "드라이버", "망치", "렌치", "선풍기", "전자레인지", "세탁기", "텔레비전", "라디오",
+            "우산", "모자", "장갑", "신발", "가방", "목걸이", "귀걸이", "반지", "벨트", "시계",
+            "버스", "지하철", "택시", "기차", "배", "헬리콥터", "스쿠터", "킥보드", "오토바이", "버터플라이",
+            "물병", "컵", "접시", "숟가락", "포크", "나이프", "프라이팬", "냄비", "주전자", "수저",
+            "햄버거", "피자", "핫도그", "샌드위치", "스파게티", "김밥", "떡볶이", "라면", "국수", "죽",
+            "해변", "산", "호수", "강", "섬", "대양", "사막", "정원", "공원", "화단",
+            "거울", "사진", "책상", "선반", "서랍", "커튼", "문", "창문", "벽", "바닥",
+            "미술관", "박물관", "도서관", "극장", "운동장", "체육관", "수영장", "경기장", "헬스장", "쇼핑몰",
+            "트럭", "캠핑카", "모터사이클", "기차역", "버스터미널", "비행기", "해양", "산악자전거", "배드민턴", "농구",
+            "지구본", "지도가", "타자기", "녹음기", "마이크", "카메라", "비디오", "스마트폰", "태블릿", "헤드폰",
+            "책장", "사전", "전자책", "로봇", "드론", "게임기", "주방용품", "고양이", "강아지", "물고기",
+            "오리", "닭", "소", "양", "말", "돼지", "염소", "토끼", "개구리", "벌",
+            "사슴", "호랑이", "기린", "코끼리", "곰", "여우", "늑대", "사자", "원숭이", "다람쥐",
+            "피아노", "기타", "드럼", "바이올린", "트럼펫", "클라리넷", "첼로", "하모니카", "플루트", "오르간",
+            "꽃병", "소파", "책상", "의자", "테이블", "커튼", "거울", "벽시계", "카펫", "식탁",
+            "계단", "엘리베이터", "복도", "주차장", "안내판", "문", "난로", "벽난로", "배수구", "청소기",
+            "세탁기", "전자레인지", "에어컨", "선풍기", "히터", "커피메이커", "믹서기", "다리미", "탁상시계", "장난감",
+            "탁구", "배드민턴", "축구", "야구", "테니스", "골프", "스키", "스케이트", "서핑", "낚시",
+            "코미디", "드라마", "액션", "로맨스", "스릴러", "애니메이션", "다큐멘터리", "미스터리", "공포", "판타지",
+            "피자", "파스타", "샐러드", "수프", "스테이크", "햄", "소시지", "치킨", "볶음밥", "오믈렛",
+            "일기", "소설", "시", "에세이", "만화", "잡지", "신문", "과학책", "역사책", "자서전",
+            "커피", "차", "주스", "우유", "초콜릿", "음료수", "스무디", "와인", "맥주", "칵테일",
+            "해파리", "문어", "오징어", "돌고래", "고래", "바다거북", "해마", "상어", "물범", "수달",
+            "바나나우유", "카푸치노", "에스프레소", "아메리카노", "티라미수", "마카롱", "케이크", "쿠키", "머핀", "도넛",
+            "하늘", "별", "구름", "비", "눈", "바람", "안개", "무지개", "천둥", "번개",
+            "보트", "요트", "유람선", "카약", "서핑보드", "스쿠버다이빙", "돛", "조타", "로프", "조타",
+            "택시", "리무진", "버스", "지하철", "기차", "비행기", "헬리콥터", "버스정류장", "기차역", "공항",
+            "컴퓨터", "노트북", "태블릿", "스마트폰", "프린터", "스캐너", "모니터", "키보드", "마우스", "웹캠",
+            "여행가방", "배낭", "여권", "지도", "여행일정", "카메라", "여행책", "일정표", "충전기", "여행용품",
+            "캔버스", "붓", "팔레트", "물감", "스케치북", "클레이", "조각", "수채화", "유화", "디지털아트",
+            "백팩", "모자", "장갑", "스카프", "코트", "자켓", "청바지", "셔츠", "드레스", "치마",
+            "운동화", "구두", "부츠", "슬리퍼", "벨트", "목걸이", "반지", "귀걸이", "팔찌", "시계",
+            "헬스장", "피트니스", "요가", "필라테스", "줌바", "권투", "유도", "태권도", "체조", "스쿼시",
+            "미니어처", "프라모델", "퍼즐", "레고", "보드게임", "카드게임", "마작", "체스", "장기", "도미노",
+            "명화", "사진", "초상화", "풍경화", "추상화", "인물화", "정물화", "벽화", "디지털화", "그래픽",
+            "부엌", "욕실", "침실", "거실", "다용도실", "베란다", "작업실", "창고", "드레스룸", "서재",
+            "백화점", "쇼핑몰", "시장", "마트", "편의점", "서점", "전자상가", "의류매장", "화장품매장", "잡화점",
+            "버섯", "채소", "과일", "해산물", "고기", "유제품", "곡물", "견과류", "음료", "조미료",
+            "골프클럽", "테니스라켓", "축구공", "야구배트", "농구공", "배드민턴라켓", "스케이트보드", "스키", "스노우보드", "헬멧",
+            "액세서리", "가구", "장식품", "조명", "미술품", "인테리어", "책상", "의자", "테이블", "선반",
+            "다이아몬드", "루비", "사파이어", "에메랄드", "진주", "오팔", "토파즈", "가넷", "터키석", "아쿠아마린",
+            "시소", "그네", "미끄럼틀", "해먹", "모래성", "물놀이기구", "자전거", "롤러블레이드", "킥보드", "스포츠카",
+            "슬리퍼", "슬랙스", "청바지", "셔츠", "가디건", "스웨터", "자켓", "후드티", "티셔츠", "드레스",
+            "가방", "지갑", "우산", "모자", "장갑", "스카프", "목걸이", "귀걸이", "반지", "벨트"
+        ];
+
+        const uniqueWords = [...new Set(allWords)];
+        allWords = uniqueWords;
+
+        let sets = []; // 세트 단어를 저장할 배열
+        let selectedBtn = 0;
+        let selectedWords = [];
+        let currentIndex = 0;
+        let startTime;
+
+        function initializeSets() {
+            const numberOfSets = 8;
+            const setSize = 10; //한 세트당 단어 갯수
+            let availableWords = [...allWords];
+
+            for (let i = 0; i < numberOfSets; i++) {
+                let setWords = [];
+                for (let j = 0; j < setSize; j++) {
+                    const randomIndex = Math.floor(Math.random() * availableWords.length);
+                    setWords.push(availableWords[randomIndex]);
+                    availableWords.splice(randomIndex, 1);
+                }
+                sets.push(setWords);
+            }
+        }
+
+        function selectSet(setNumber) {
+            console.log(sets);
+            selectedBtn = setNumber;
+            if (sets[setNumber]) {
+                selectedWords = sets[setNumber];
+                document.getElementById('start-button').classList.remove('hidden');
+            }
+        }
+
+        function startGame() {
+            document.getElementById('set-selection').classList.add('hidden');
+            document.getElementById('start-button').classList.add('hidden');
+            document.getElementById('word-display').classList.remove('hidden');
+            document.getElementById('current-word').textContent = '';
+            document.getElementById(selectedBtn).classList.add('hidden');
+            //아래는 시간 계산용
+            startTime = new Date();
+            console.log(selectedWords)
+            //다음단어 버튼
+            showNextWord();
+        }
+
+
+        function showNextWord() {
+            if (currentIndex < selectedWords.length) {
+                console.log(currentIndex);;
+                console.log(selectedWords[currentIndex]);
+                document.getElementById('current-word').textContent = selectedWords[currentIndex];
+                currentIndex++;
+                if (currentIndex === selectedWords.length) {
+                    document.getElementById('next-button').classList.add('hidden');
+                    document.getElementById('end-button').classList.remove('hidden');
+                }
+            }
+        }
+
+        function nextWord() {
+            showNextWord();
+        }
+
+        function endGame() {
+            document.getElementById('next-button').classList.add('hidden');
+            document.getElementById('end-button').classList.remove('hidden');
+            const endTime = new Date();
+            const duration = endTime - startTime;
+            const minutes = Math.floor(duration / 60000);
+            const seconds = Math.floor((duration % 60000) / 1000);
+            const milliseconds = Math.floor((duration % 1000) / 10);
+            alert(`총 시간: ${minutes}분 ${seconds}초`);
+
+            currentIndex = 0;
+            document.getElementById('set-selection').classList.remove('hidden');
+            document.getElementById('start-button').classList.remove('hidden');
+            document.getElementById('word-display').classList.add('hidden');
+            document.getElementById('next-button').classList.remove('hidden');
+            document.getElementById('end-button').classList.add('hidden');
+            document.getElementById('current-word').textContent = '';
+        }
+
+
+        //페이지 로딩시 단어 배열 랜덤화
+        initializeSets();
+
+    </script>
+
+</body>
+
+</html>
